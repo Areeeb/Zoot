@@ -6,15 +6,30 @@ import {
   Post,
   Get,
   Req,
-  UseGuards 
+  Body,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 @Controller('auth')
 export class AuthController {
+  constructor(private authService: AuthService) {}
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  login() {
-    throw new NotImplementedException('this method is not implemented');
+  async login(@Body() loginUserDto) {
+    const user = await this.authService.validateUser(
+      loginUserDto.username,
+      loginUserDto.password,
+    );
+    if (!user) {
+      return { message: 'Invalid credentials' };
+    }
+    return this.authService.login(user);
+  }
+  @Post('register')
+  async register(@Body() createUserDto) {
+    return this.authService.register(createUserDto);
   }
   @Get('google')
   @UseGuards(AuthGuard('google'))
